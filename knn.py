@@ -45,6 +45,14 @@ class KNNClassifier:
         elif self.distance_metric == 'manhattan':
             return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
+    def calculate_neighbors(self, point):
+        distances = [(self.calculate_distance(point, data[:2]), data[1]) for data in self.training_data]
+        distances.sort(key=lambda x: x[0])
+        neighbors = distances[:self.k]
+        colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange']
+        result = [(data[0], data[1], colors[int(data[1])], data[0]) for data in neighbors]
+        return result
+
 class KNNApp:
     def __init__(self, master):
         self.master = master
@@ -55,6 +63,8 @@ class KNNApp:
         self.canvas.pack()
         self.knn_classifier = None
         self.clicked_points = []
+        self.last_clicked_point = None
+        self.line_tags = []
 
         self.create_widgets()
 
@@ -108,21 +118,34 @@ class KNNApp:
         x = event.x / self.canvas_width
         y = event.y / self.canvas_height
         category = self.knn_classifier.classify_point((x, y))
-        self.clicked_points.append((x, y, category))
+        neighbors = self.knn_classifier.calculate_neighbors((x, y))
+
+        if self.last_clicked_point:
+            # Usuń poprzednie linie
+            self.canvas.delete(*self.line_tags)
+            self.line_tags = []
+
+        self.last_clicked_point = (x, y, category, neighbors)
+        self.clicked_points.append(self.last_clicked_point)
         self.display_clicked_points()
 
     def display_clicked_points(self):
         self.canvas.delete("lines")
         for point in self.clicked_points:
-            x, y, category = point
+            x, y, category, neighbors = point
             color = ['red', 'blue', 'green', 'yellow', 'purple', 'orange'][int(category)]
             self.canvas.create_rectangle(x * self.canvas_width - 5, y * self.canvas_height - 5,
                                          x * self.canvas_width + 5, y * self.canvas_height + 5, fill=color)
-
-            if len(self.clicked_points) > 1:
-                prev_x, prev_y, _ = self.clicked_points[-2]
-                self.canvas.create_line(prev_x * self.canvas_width, prev_y * self.canvas_height,
-                                        x * self.canvas_width, y * self.canvas_height, fill=color, tags="lines")
+                    
+        if self.last_clicked_point:
+            x, y, _, _ = self.last_clicked_point
+            for neighbor in neighbors:
+                nx, ny, ncolor, distance = neighbor
+                self.canvas.create_line(x * self.canvas_width, y * self.canvas_height,
+                                        nx * self.canvas_width, ny * self.canvas_height, fill=ncolor, tags="lines")
+                self.canvas.create_text((x * self.canvas_width + nx * self.canvas_width) / 2,
+                                        (y * self.canvas_height + ny * self.canvas_height) / 2,
+                                        text=f'{distance:.2f}', fill='black', tags="lines")
 
     def classify_point(self):
         if self.knn_classifier:
