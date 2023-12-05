@@ -56,12 +56,13 @@ class KNN:
             votes = self.data.loc[nearest.index, 2].value_counts()
         else:
             weights = 1 / nearest**2
-            votes = self.data.loc[nearest.index, 2].groupby(weights.index).apply(lambda x: (x * weights).sum()).value_counts()
+            votes = self.data.loc[nearest.index, 2].groupby(self.data.loc[nearest.index, 2]).apply(lambda x: (x * weights).sum())
         category = int(votes.idxmax())
+        print(category)
         color = self.colors[category]
         if self.last_point is not None:
             self.canvas.delete(self.last_point)
-        self.last_point = self.canvas.create_rectangle(event.x-5, event.y-5, event.x+5, event.y+5, outline=color)
+        self.last_point = self.canvas.create_rectangle(event.x-5, event.y-5, event.x+5, event.y+5, fill=color)
         for neighbor in self.neighbors:
             self.canvas.delete(neighbor)
         self.neighbors = []
