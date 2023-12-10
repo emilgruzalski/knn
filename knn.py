@@ -9,115 +9,115 @@ class KNN:
         self.master = master
         self.canvas = tk.Canvas(self.master, width=600, height=600)
         self.canvas.pack()
-        self.data = None  # Dane wczytane z pliku CSV
-        self.norm_data = None  # Znormalizowane dane
-        self.k = tk.IntVar(value=1)  # Zmienna przechowująca wartość parametru k
-        self.metric = tk.StringVar(value='euclidean')  # Zmienna przechowująca rodzaj metryki (euclidean lub manhattan)
-        self.vote = tk.StringVar(value='simple')  # Zmienna przechowująca rodzaj głosowania (simple lub weighted)
-        self.colors = ['red', 'green', 'blue', 'yellow', 'purple', 'orange']  # Kolory punktów na płaszczyźnie
-        self.points = []  # Lista punktów na płaszczyźnie
-        self.last_point = None  # Ostatnio dodany punkt
-        self.neighbors = []  # Lista sąsiadów punktu, używana do ich wyświetlania na płaszczyźnie
+        self.data = None  # Data loaded from CSV file
+        self.norm_data = None  # Normalized data
+        self.k = tk.IntVar(value=1)  # Variable to store the value of the k parameter
+        self.metric = tk.StringVar(value='euclidean')  # Variable to store the metric type (euclidean or manhattan)
+        self.vote = tk.StringVar(value='simple')  # Variable to store the type of voting (simple or weighted)
+        self.colors = ['red', 'green', 'blue', 'yellow', 'purple', 'orange']  # Colors of points on the plane
+        self.points = []  # List of points on the plane
+        self.last_point = None  # Last added point
+        self.neighbors = []  # List of neighbors for a point, used to display them on the plane
 
-        # Tworzenie suwaka do ustawiania wartości k
+        # Creating a slider to set the value of k
         self.k_slider = tk.Scale(self.master, from_=1, to=20, orient='horizontal', variable=self.k)
         self.k_slider.pack()
         
-        # Tworzenie menu do wyboru metryki
+        # Creating a menu to choose the metric
         self.metric_menu = tk.OptionMenu(self.master, self.metric, 'euclidean', 'manhattan')
         self.metric_menu.pack()
         
-        # Tworzenie menu do wyboru rodzaju głosowania
+        # Creating a menu to choose the type of voting
         self.vote_menu = tk.OptionMenu(self.master, self.vote, 'simple', 'weighted')
         self.vote_menu.pack()
         
-        # Tworzenie przycisku do wczytywania danych
-        self.load_button = tk.Button(self.master, text='Wczytaj dane', command=self.load_data)
+        # Creating a button to load data
+        self.load_button = tk.Button(self.master, text='Load Data', command=self.load_data)
         self.load_button.pack()
 
     def load_data(self):
-        # Wybieranie pliku z danymi za pomocą okna dialogowego
+        # Choosing a file with data using a dialog window
         filename = filedialog.askopenfilename()
         
-        # Wczytywanie danych z pliku CSV przy użyciu biblioteki pandas
+        # Loading data from a CSV file using the pandas library
         self.data = pd.read_csv(filename, header=None)
         
-        # Normalizacja danych na przedział [0, 1]
+        # Normalizing data to the range [0, 1]
         self.norm_data = (self.data - self.data.min()) / (self.data.max() - self.data.min())
         
-        # Rysowanie punktów na płaszczyźnie
+        # Drawing points on the plane
         self.draw_points()
 
     def draw_points(self):
-        # Czyszczenie płaszczyzny
+        # Clearing the canvas
         self.canvas.delete('all')
         
-        # Rysowanie punktów na płaszczyźnie
+        # Drawing points on the plane
         for i in range(len(self.norm_data)):
             x = self.norm_data.iloc[i, 0] * 550 + 25
             y = self.norm_data.iloc[i, 1] * 550 + 25
             color = self.colors[self.data.iloc[i, 2]]
             self.canvas.create_oval(x-5, y-5, x+5, y+5, fill=color)
         
-        # Przypisanie funkcji do zdarzenia kliknięcia lewym przyciskiem myszy
+        # Assigning a function to the left mouse button click event
         self.canvas.bind('<Button-1>', self.classify_point)
 
     def classify_point(self, event):
-        # Wyznaczenie współrzędnych punktu na podstawie pozycji kursora
+        # Determining the coordinates of the point based on the cursor position
         x = (event.x - 25) / 550
         y = (event.y - 25) / 550
         
-        # Utworzenie serii danych dla punktu
+        # Creating a data series for the point
         point = pd.Series([x, y])
         
-        # Obliczenie odległości między punktem a pozostałymi danymi
+        # Calculating the distance between the point and the other data points
         if self.metric.get() == 'euclidean':
             dists = self.norm_data.iloc[:, :2].apply(lambda row: distance.euclidean(row, point), axis=1)
         else:
             dists = self.norm_data.iloc[:, :2].apply(lambda row: distance.cityblock(row, point), axis=1)
         
-        # Wybór k najbliższych sąsiadów
+        # Selecting the k nearest neighbors
         nearest = dists.nsmallest(self.k.get())
         
-        # Głosowanie na klasę punktu w zależności od wybranej metody głosowania
+        # Voting for the class of the point depending on the selected voting method
         if self.vote.get() == 'simple':
             votes = self.data.loc[nearest.index, 2].value_counts()
         else:
             weights = 1 / nearest**2
             votes = self.data.loc[nearest.index, 2].groupby(self.data.loc[nearest.index, 2]).apply(lambda x: (x * weights).sum())
         
-        # Wybór kategorii na podstawie głosowania
+        # Selecting the category based on the voting
         category = int(votes.idxmax())
         
-        # Ustalenie koloru na podstawie wybranej kategorii
+        # Determining the color based on the selected category
         color = self.colors[category]
         
-        # Usunięcie poprzedniego punktu
+        # Deleting the previous point
         if self.last_point is not None:
             self.canvas.delete(self.last_point)
         
-        # Rysowanie nowego punktu
+        # Drawing the new point
         self.last_point = self.canvas.create_rectangle(event.x-5, event.y-5, event.x+5, event.y+5, fill=color)
         
-        # Usunięcie poprzednich sąsiadów
+        # Deleting the previous neighbors
         for neighbor in self.neighbors:
             self.canvas.delete(neighbor)
         
-        # Wyczyszczenie listy sąsiadów
+        # Clearing the list of neighbors
         self.neighbors = []
         
-        # Rysowanie okręgów wokół sąsiadów i ich odległości
+        # Drawing circles around neighbors and their distances
         for i in nearest.index:
             nx = self.norm_data.iloc[i, 0] * 550 + 25
             ny = self.norm_data.iloc[i, 1] * 550 + 25
             self.neighbors.append(self.canvas.create_oval(nx-7, ny-7, nx+7, ny+7, outline='black'))
             self.neighbors.append(self.canvas.create_text(nx, ny-10, text=f'{nearest[i]:.2f}', fill='black'))
 
-# Inicjalizacja głównego okna Tkinter
+# Initializing the main Tkinter window
 root = tk.Tk()
 
-# Utworzenie obiektu klasy KNN
+# Creating an instance of the KNN class
 knn = KNN(root)
 
-# Uruchomienie pętli głównej programu Tkinter
+# Running the main Tkinter event loop
 root.mainloop()
