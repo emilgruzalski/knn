@@ -1,34 +1,18 @@
-# KNN Visualization Tool
+# Vue 3 + TypeScript + Vite
 
-## Description
-This is a visualization tool for the k-nearest neighbors (KNN) algorithm with a graphical user interface created using `tkinter`. It allows users to load data, normalize it, and classify new points based on the chosen metric and voting method.
+This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
 
-## Features
-- Load data from a CSV file
-- Normalize data to the range [0, 1]
-- Select the number of nearest neighbors (k)
-- Choose the metric (Euclidean or Manhattan)
-- Choose the voting method (simple or weighted)
-- Visualize points and classify in real-time
+## Recommended IDE Setup
 
-## Requirements
-- Python 3.x
-- `tkinter`
-- `pandas`
-- `numpy`
-- `scipy`
+- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
-## Installation
-Ensure you have Python installed along with the libraries listed above. If not, you can install them using the following command:
-```bash 
-pip install pandas numpy scipy
-```
+## Type Support For `.vue` Imports in TS
 
-## Usage
-To run the tool, clone the repository and execute the `knn.py` file:
-```bash
-git clone https://github.com/emilgruzalski/knn.git cd knn python knn.py
-```
+TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
 
-## License
-This project is released under the MIT License.
+If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+
+1. Disable the built-in TypeScript Extension
+   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
+   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
+2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
